@@ -2,131 +2,124 @@
 #include <cstdint>
 #include "alg.h"
 
-int findMatches1(int* data, int size, int target) {
-    int result = 0;
-    for (int idx = 0; idx < size; ++idx) {
-        for (int jdx = idx + 1; jdx < size; ++jdx) {
-            if (data[idx] + data[jdx] == target) {
-                ++result;
-            }
-        }
+int countPairs1(int *arr, int len, int value) {
+  int res = 0;
+  for (int i = 0; i < len; i++) {
+    for (int j = i + 1; j < len; j++) {
+      if (arr[i] + arr[j] == value) {
+        res++;
+      }
     }
-    return result;
+  }
+  return res;
 }
 
-int findMatches2(int* data, int size, int target) {
-    int result = 0;
-    int start = 0;
-    int finish = size - 1;
+int countPairs2(int *arr, int len, int value) {
+  int res = 0;
+  int lo = 0;
+  int hi = len - 1;
 
-    while (start < finish) {
-        int current = data[start] + data[finish];
+  while (lo < hi) {
+    int cur = arr[lo] + arr[hi];
 
-        if (current == target) {
-            if (data[start] == data[finish]) {
-                int length = finish - start + 1;
-                result += length * (length - 1) / 2;
-                break;
-            }
-            else {
-                int repeatStart = 1;
-                int repeatFinish = 1;
+    if (cur == value) {
+      if (arr[lo] == arr[hi]) {
+        int k = hi - lo + 1;
+        res += k * (k - 1) / 2;
+        break;
+      } else {
+        int cntL = 1;
+        int cntR = 1;
 
-                while (start + repeatStart < finish && data[start] == data[start + repeatStart]) {
-                    ++repeatStart;
-                }
-
-                while (finish - repeatFinish > start && data[finish] == data[finish - repeatFinish]) {
-                    ++repeatFinish;
-                }
-
-                result += repeatStart * repeatFinish;
-                start += repeatStart;
-                finish -= repeatFinish;
-            }
+        while (lo + cntL < hi && arr[lo] == arr[lo + cntL]) {
+          cntL++;
         }
-        else if (current < target) {
-            ++start;
+
+        while (hi - cntR > lo && arr[hi] == arr[hi - cntR]) {
+          cntR++;
         }
-        else {
-            --finish;
-        }
+
+        res += cntL * cntR;
+        lo += cntL;
+        hi -= cntR;
+      }
+    } else if (cur < value) {
+      lo++;
+    } else {
+      hi--;
     }
+  }
 
-    return result;
+  return res;
 }
 
-int getFirstPos(int* data, int leftPos, int rightPos, int val) {
-    int answer = -1;
-    while (leftPos <= rightPos) {
-        int middle = leftPos + (rightPos - leftPos) / 2;
-        if (data[middle] == val) {
-            answer = middle;
-            rightPos = middle - 1;
-        }
-        else if (data[middle] < val) {
-            leftPos = middle + 1;
-        }
-        else {
-            rightPos = middle - 1;
-        }
+static int lowerBound(int *arr, int l, int r, int x) {
+  int ans = -1;
+  while (l <= r) {
+    int m = l + (r - l) / 2;
+    if (arr[m] == x) {
+      ans = m;
+      r = m - 1;
+    } else if (arr[m] < x) {
+      l = m + 1;
+    } else {
+      r = m - 1;
     }
-    return answer;
+  }
+  return ans;
 }
 
-int getLastPos(int* data, int leftPos, int rightPos, int val) {
-    int answer = -1;
-    while (leftPos <= rightPos) {
-        int middle = leftPos + (rightPos - leftPos) / 2;
-        if (data[middle] == val) {
-            answer = middle;
-            leftPos = middle + 1;
-        }
-        else if (data[middle] < val) {
-            leftPos = middle + 1;
-        }
-        else {
-            rightPos = middle - 1;
-        }
+static int upperBound(int *arr, int l, int r, int x) {
+  int ans = -1;
+  while (l <= r) {
+    int m = l + (r - l) / 2;
+    if (arr[m] == x) {
+      ans = m;
+      l = m + 1;
+    } else if (arr[m] < x) {
+      l = m + 1;
+    } else {
+      r = m - 1;
     }
-    return answer;
+  }
+  return ans;
 }
 
-int findMatches3(int* data, int size, int target) {
-    int result = 0;
+int countPairs3(int *arr, int len, int value) {
+  int res = 0;
 
-    for (int pos = 0; pos < size; ++pos) {
-        if (pos > 0 && data[pos] == data[pos - 1]) {
-            continue;
-        }
-
-        int need = target - data[pos];
-
-        if (need < data[pos]) {
-            break;
-        }
-
-        if (need == data[pos]) {
-            int lastOccurrence = getLastPos(data, pos, size - 1, data[pos]);
-            int cnt = lastOccurrence - pos + 1;
-            result += cnt * (cnt - 1) / 2;
-        }
-        else {
-            int firstOccurrence = getFirstPos(data, pos + 1, size - 1, need);
-            if (firstOccurrence == -1) {
-                continue;
-            }
-            int lastOccurrence = getLastPos(data, pos + 1, size - 1, need);
-
-            int lastPosCurrent = getLastPos(data, pos, size - 1, data[pos]);
-            int cntCurrent = lastPosCurrent - pos + 1;
-
-            result += cntCurrent * (lastOccurrence - firstOccurrence + 1);
-        }
+  for (int i = 0; i < len; i++) {
+    if (i > 0 && arr[i] == arr[i - 1]) {
+      continue;
     }
 
-    return result;
+    int need = value - arr[i];
+
+    if (need < arr[i]) {
+      break;
+    }
+
+    if (need == arr[i]) {
+      int last = upperBound(arr, i, len - 1, arr[i]);
+      int cnt = last - i + 1;
+      res += cnt * (cnt - 1) / 2;
+    } else {
+      int first = lowerBound(arr, i + 1, len - 1, need);
+      if (first == -1) {
+        continue;
+      }
+      int last = upperBound(arr, i + 1, len - 1, need);
+
+      int lastI = upperBound(arr, i, len - 1, arr[i]);
+      int cntI = lastI - i + 1;
+
+      res += cntI * (last - first + 1);
+    }
+  }
+
+  return res;
 }
+
 
 
 
